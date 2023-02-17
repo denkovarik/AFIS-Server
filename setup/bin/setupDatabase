@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# install and setup MySQL
+echo "Installing MySQL..."
+sudo apt update
+sudo apt upgrade
+wget -c https://repo.mysql.com//mysql-apt-config_0.8.13-1_all.deb
+sudo dpkg -i mysql-apt-config_0.8.13-1_all.deb
+sudo apt-get install default-mysql-server
+echo ""
+echo "############################### USE THESE SETTINGS ####################################"
+echo "Remove anonymous users? (Press y|Y for Yes, any other key for No) : y"
+echo "Disallow root login remotely? (Press y|Y for Yes, any other key for No) : y"
+echo "Remove test database and access to it? (Press y|Y for Yes, any other key for No) : y"
+echo "Reload privilege tables now? (Press y|Y for Yes, any other key for No) : y"
+echo "#######################################################################################"
+sudo mysql_secure_installation
+read -sp 'Please enter the password chosen for database: ' passvar
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# build and fill the tables
+echo "creating admin..."
+sudo mysql --user=root --password=$passvar -s < createUser.sql
+echo "finished creating admin"
+echo "building tables..."
+sudo mysql --user=root --password=$passvar -s < createTables.sql
+echo "finished building tables"
+echo "filling Nanoparticle dataset..."
+sudo mysql --user=root --password=$passvar -s < insertNanoparticlesDB.sql
+echo "finished filling Nanoparticle dataset"
+echo "filling MOLF_DB1 dataset..."
+sudo mysql --user=root --password=$passvar -s < insertMOLF_DB1.sql
+echo "finished filling MOLF_DB1 dataset"
+echo "displaying contents of Subjects table as confermation of inserts"
+sudo mysql --user=root --password=$passvar -s < showSubjects.sql
